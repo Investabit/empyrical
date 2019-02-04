@@ -66,10 +66,14 @@ from .stats import (
 )
 
 from .periods import (
+    CRYPTO,
     DAILY,
     WEEKLY,
     MONTHLY,
-    YEARLY
+    YEARLY,
+    APPROX_BDAYS_PER_MONTH,
+    APPROX_BDAYS_PER_YEAR,
+    APPROX_BDAYS_PER_YEAR_CRYPTO
 )
 
 
