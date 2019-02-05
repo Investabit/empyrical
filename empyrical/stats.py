@@ -21,8 +21,8 @@ from scipy import stats
 from six import iteritems
 
 from .utils import nanmean, nanstd, nanmin, up, down, roll, rolling_window
-from .periods import ANNUALIZATION_FACTORS, APPROX_BDAYS_PER_YEAR
-from .periods import DAILY, WEEKLY, MONTHLY, YEARLY
+from .periods import ANNUALIZATION_FACTORS, APPROX_BDAYS_PER_YEAR, APPROX_BDAYS_PER_YEAR_CRYPTO
+from .periods import CRYPTO, DAILY, WEEKLY, MONTHLY, YEARLY
 
 
 def _create_unary_vectorized_roll_function(function):
@@ -158,6 +158,7 @@ def annualization_factor(period, annualization):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -396,7 +397,7 @@ def max_drawdown(returns, out=None):
 roll_max_drawdown = _create_unary_vectorized_roll_function(max_drawdown)
 
 
-def annual_return(returns, period=DAILY, annualization=None):
+def annual_return(returns, period=CRYPTO, annualization=None):
     """
     Determines the mean annual growth rate of returns. This is equivilent
     to the compound annual growth rate.
@@ -414,6 +415,7 @@ def annual_return(returns, period=DAILY, annualization=None):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -438,7 +440,7 @@ def annual_return(returns, period=DAILY, annualization=None):
     return ending_value ** (1 / num_years) - 1
 
 
-def cagr(returns, period=DAILY, annualization=None):
+def cagr(returns, period=CRYPTO, annualization=None):
     """
     Compute compound annual growth rate. Alias function for
     :func:`~empyrical.stats.annual_return`
@@ -456,6 +458,7 @@ def cagr(returns, period=DAILY, annualization=None):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -476,7 +479,7 @@ roll_cagr = _create_unary_vectorized_roll_function(cagr)
 
 
 def annual_volatility(returns,
-                      period=DAILY,
+                      period=CRYPTO,
                       alpha=2.0,
                       annualization=None,
                       out=None):
@@ -496,6 +499,7 @@ def annual_volatility(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     alpha : float, optional
         Scaling relation (Levy stability exponent).
@@ -536,7 +540,7 @@ roll_annual_volatility = _create_unary_vectorized_roll_function(
 )
 
 
-def calmar_ratio(returns, period=DAILY, annualization=None):
+def calmar_ratio(returns, period=CRYPTO, annualization=None):
     """
     Determines the Calmar ratio, or drawdown ratio, of a strategy.
 
@@ -553,6 +557,7 @@ def calmar_ratio(returns, period=DAILY, annualization=None):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -588,7 +593,7 @@ def calmar_ratio(returns, period=DAILY, annualization=None):
 
 
 def omega_ratio(returns, risk_free=0.0, required_return=0.0,
-                annualization=APPROX_BDAYS_PER_YEAR):
+                annualization=APPROX_BDAYS_PER_YEAR_CRYPTO):
     """Determines the Omega ratio of a strategy.
 
     Parameters
@@ -642,7 +647,7 @@ def omega_ratio(returns, risk_free=0.0, required_return=0.0,
 
 def sharpe_ratio(returns,
                  risk_free=0,
-                 period=DAILY,
+                 period=CRYPTO,
                  annualization=None,
                  out=None):
     """
@@ -663,6 +668,7 @@ def sharpe_ratio(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -717,7 +723,7 @@ roll_sharpe_ratio = _create_unary_vectorized_roll_function(sharpe_ratio)
 
 def sortino_ratio(returns,
                   required_return=0,
-                  period=DAILY,
+                  period=CRYPTO,
                   annualization=None,
                   out=None,
                   _downside_risk=None):
@@ -739,6 +745,7 @@ def sortino_ratio(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -801,7 +808,7 @@ roll_sortino_ratio = _create_unary_vectorized_roll_function(sortino_ratio)
 
 def downside_risk(returns,
                   required_return=0,
-                  period=DAILY,
+                  period=CRYPTO,
                   annualization=None,
                   out=None):
     """
@@ -822,6 +829,7 @@ def downside_risk(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -995,7 +1003,7 @@ def _aligned_series(*many_series):
 def alpha_beta(returns,
                factor_returns,
                risk_free=0.0,
-               period=DAILY,
+               period=CRYPTO,
                annualization=None,
                out=None):
     """Calculates annualized alpha and beta.
@@ -1020,6 +1028,7 @@ def alpha_beta(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -1077,7 +1086,7 @@ def roll_alpha_beta(returns, factor_returns, window=10, **kwargs):
 def alpha_beta_aligned(returns,
                        factor_returns,
                        risk_free=0.0,
-                       period=DAILY,
+                       period=CRYPTO,
                        annualization=None,
                        out=None):
     """Calculates annualized alpha and beta.
@@ -1106,6 +1115,7 @@ def alpha_beta_aligned(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -1145,7 +1155,7 @@ roll_alpha_beta_aligned = _create_binary_vectorized_roll_function(
 def alpha(returns,
           factor_returns,
           risk_free=0.0,
-          period=DAILY,
+          period=CRYPTO,
           annualization=None,
           out=None,
           _beta=None):
@@ -1171,6 +1181,7 @@ def alpha(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -1210,7 +1221,7 @@ roll_alpha = _create_binary_vectorized_roll_function(alpha)
 def alpha_aligned(returns,
                   factor_returns,
                   risk_free=0.0,
-                  period=DAILY,
+                  period=CRYPTO,
                   annualization=None,
                   out=None,
                   _beta=None):
@@ -1240,6 +1251,7 @@ def alpha_aligned(returns,
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     annualization : int, optional
         Used to suppress default values available in `period` to convert
@@ -1511,7 +1523,7 @@ def tail_ratio(returns):
         np.abs(np.percentile(returns, 5))
 
 
-def capture(returns, factor_returns, period=DAILY):
+def capture(returns, factor_returns, period=CRYPTO, **kwargs):
     """
     Compute capture ratio.
 
@@ -1532,6 +1544,7 @@ def capture(returns, factor_returns, period=DAILY):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     Returns
     -------
@@ -1542,11 +1555,11 @@ def capture(returns, factor_returns, period=DAILY):
     See http://www.investopedia.com/terms/u/up-market-capture-ratio.asp for
     details.
     """
-    return (annual_return(returns, period=period) /
-            annual_return(factor_returns, period=period))
+    return (annual_return(returns, period=period, **kwargs) /
+            annual_return(factor_returns, period=period, **kwargs))
 
 
-def up_capture(returns, factor_returns, **kwargs):
+def up_capture(returns, factor_returns, period=CRYPTO, **kwargs):
     """
     Compute the capture ratio for periods when the benchmark return is positive
 
@@ -1567,6 +1580,7 @@ def up_capture(returns, factor_returns, **kwargs):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     Returns
     -------
@@ -1577,10 +1591,10 @@ def up_capture(returns, factor_returns, **kwargs):
     See http://www.investopedia.com/terms/u/up-market-capture-ratio.asp for
     more information.
     """
-    return up(returns, factor_returns, function=capture, **kwargs)
+    return up(returns, factor_returns, function=capture, period=period, **kwargs)
 
 
-def down_capture(returns, factor_returns, **kwargs):
+def down_capture(returns, factor_returns, period=CRYPTO, **kwargs):
     """
     Compute the capture ratio for periods when the benchmark return is negative
 
@@ -1601,6 +1615,7 @@ def down_capture(returns, factor_returns, **kwargs):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     Returns
     -------
@@ -1611,10 +1626,10 @@ def down_capture(returns, factor_returns, **kwargs):
     See http://www.investopedia.com/terms/d/down-market-capture-ratio.asp for
     more information.
     """
-    return down(returns, factor_returns, function=capture, **kwargs)
+    return down(returns, factor_returns, function=capture, period=period, **kwargs)
 
 
-def up_down_capture(returns, factor_returns, **kwargs):
+def up_down_capture(returns, factor_returns, period=CRYPTO, **kwargs):
     """
     Computes the ratio of up_capture to down_capture.
 
@@ -1635,14 +1650,15 @@ def up_down_capture(returns, factor_returns, **kwargs):
             'monthly':12
             'weekly': 52
             'daily': 252
+            'crypto': 365
 
     Returns
     -------
     up_down_capture : float
         the updown capture ratio
     """
-    return (up_capture(returns, factor_returns, **kwargs) /
-            down_capture(returns, factor_returns, **kwargs))
+    return (up_capture(returns, factor_returns, period=period, **kwargs) /
+            down_capture(returns, factor_returns, period=period, **kwargs))
 
 
 def up_alpha_beta(returns, factor_returns, **kwargs):
