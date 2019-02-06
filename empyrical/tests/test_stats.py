@@ -279,6 +279,7 @@ class TestStats(BaseTestCase):
         assert depressed_dd <= max_dd
 
     @parameterized.expand([
+        (mixed_returns, empyrical.CRYPTO, 3.706354044661887),
         (mixed_returns, empyrical.DAILY, 1.9135925373194231),
         (weekly_returns, empyrical.WEEKLY, 0.24690830513998208),
         (monthly_returns, empyrical.MONTHLY, 0.052242061386048144)
@@ -294,6 +295,7 @@ class TestStats(BaseTestCase):
 
     @parameterized.expand([
         (flat_line_1_tz, empyrical.DAILY, 0.0),
+        (mixed_returns, empyrical.CRYPTO, 1.0995737810624624),
         (mixed_returns, empyrical.DAILY, 0.9136465399704637),
         (weekly_returns, empyrical.WEEKLY, 0.38851569394870583),
         (monthly_returns, empyrical.MONTHLY, 0.18663690238892558)
@@ -311,6 +313,7 @@ class TestStats(BaseTestCase):
     @parameterized.expand([
         (empty_returns, empyrical.DAILY, np.nan),
         (one_return, empyrical.DAILY, np.nan),
+        (mixed_returns, empyrical.CRYPTO, 37.06354044661889),
         (mixed_returns, empyrical.DAILY, 19.135925373194233),
         (weekly_returns, empyrical.WEEKLY, 2.4690830513998208),
         (monthly_returns, empyrical.MONTHLY, 0.52242061386048144)
@@ -341,6 +344,7 @@ class TestStats(BaseTestCase):
         assert_almost_equal(
             self.empyrical.omega_ratio(
                 returns,
+                annualization=empyrical.APPROX_BDAYS_PER_YEAR,
                 risk_free=risk_free,
                 required_return=required_return),
             expected,
@@ -354,25 +358,29 @@ class TestStats(BaseTestCase):
     ])
     def test_omega_returns(self, returns, required_return_less,
                            required_return_more):
-        assert self.empyrical.omega_ratio(returns, required_return_less) > \
-               self.empyrical.omega_ratio(returns, required_return_more)
+        assert self.empyrical.omega_ratio(returns, required_return_less,
+                                          annualization=empyrical.APPROX_BDAYS_PER_YEAR) > \
+               self.empyrical.omega_ratio(returns, required_return_more,
+                                          annualization=empyrical.APPROX_BDAYS_PER_YEAR)
 
     # Regressive sharpe ratio tests
     @parameterized.expand([
-        (empty_returns, 0.0, np.nan),
-        (one_return, 0.0, np.nan),
-        (mixed_returns, mixed_returns, np.nan),
-        (mixed_returns, 0.0, 1.7238613961706866),
-        (mixed_returns, simple_benchmark, 0.34111411441060574),
-        (positive_returns, 0.0, 52.915026221291804),
-        (negative_returns, 0.0, -24.406808633910085),
-        (flat_line_1, 0.0, np.inf),
+        (empty_returns, 0.0, empyrical.DAILY, np.nan),
+        (one_return, 0.0, empyrical.DAILY, np.nan),
+        (mixed_returns, mixed_returns, empyrical.DAILY, np.nan),
+        (mixed_returns, 0.0, empyrical.CRYPTO, 2.0746675114386086),
+        (mixed_returns, 0.0, empyrical.DAILY, 1.7238613961706866),
+        (mixed_returns, simple_benchmark, empyrical.DAILY, 0.34111411441060574),
+        (positive_returns, 0.0, empyrical.DAILY, 52.915026221291804),
+        (negative_returns, 0.0, empyrical.DAILY, -24.406808633910085),
+        (flat_line_1, 0.0, empyrical.DAILY, np.inf),
     ])
-    def test_sharpe_ratio(self, returns, risk_free, expected):
+    def test_sharpe_ratio(self, returns, risk_free, period, expected):
         assert_almost_equal(
             self.empyrical.sharpe_ratio(
                 returns,
-                risk_free=risk_free),
+                risk_free=risk_free,
+                period=period),
             expected,
             DECIMAL_PLACES)
 
@@ -459,6 +467,7 @@ class TestStats(BaseTestCase):
         (empty_returns, 0.0, empyrical.DAILY, np.nan),
         (one_return, 0.0, empyrical.DAILY, 0.0),
         (mixed_returns, mixed_returns, empyrical.DAILY, 0.0),
+        (mixed_returns, 0.0, empyrical.CRYPTO, 0.7274957044546724),
         (mixed_returns, 0.0, empyrical.DAILY, 0.60448325038829653),
         (mixed_returns, 0.1, empyrical.DAILY, 1.7161730681956295),
         (weekly_returns, 0.0, empyrical.WEEKLY, 0.25888650451930134),
@@ -552,6 +561,7 @@ class TestStats(BaseTestCase):
         (empty_returns, 0.0, empyrical.DAILY, np.nan),
         (one_return, 0.0, empyrical.DAILY, np.nan),
         (mixed_returns, mixed_returns, empyrical.DAILY, np.nan),
+        (mixed_returns, 0.0, empyrical.CRYPTO, 3.1357573467873823),
         (mixed_returns, 0.0, empyrical.DAILY, 2.605531251673693),
         (mixed_returns, flat_line_1, empyrical.DAILY,
             -1.3934779588919977),
@@ -738,7 +748,7 @@ class TestStats(BaseTestCase):
         alpha, beta = self.empyrical(
             pandas_only=len(returns) != len(benchmark),
             return_types=np.ndarray,
-        ).alpha_beta(returns, benchmark)
+        ).alpha_beta(returns, benchmark, period=empyrical.DAILY)
         assert_almost_equal(
             alpha,
             expected[0],
@@ -757,7 +767,7 @@ class TestStats(BaseTestCase):
         (mixed_returns, -mixed_returns, 0.0),
     ])
     def test_alpha(self, returns, benchmark, expected):
-        observed = self.empyrical.alpha(returns, benchmark)
+        observed = self.empyrical.alpha(returns, benchmark, period=empyrical.DAILY)
         assert_almost_equal(
             observed,
             expected,
@@ -802,11 +812,11 @@ class TestStats(BaseTestCase):
         returns_raised = returns+translation
         alpha_beta = self.empyrical(return_types=np.ndarray).alpha_beta
         (alpha_depressed, beta_depressed) = alpha_beta(
-            returns_depressed, benchmark)
+            returns_depressed, benchmark, period=empyrical.DAILY)
         (alpha_standard, beta_standard) = alpha_beta(
-            returns, benchmark)
+            returns, benchmark, period=empyrical.DAILY)
         (alpha_raised, beta_raised) = alpha_beta(
-            returns_raised, benchmark)
+            returns_raised, benchmark, period=empyrical.DAILY)
         # Alpha should change proportionally to how much returns were
         # translated.
         assert_almost_equal(
@@ -855,8 +865,8 @@ class TestStats(BaseTestCase):
         benchmark_more = pd.Series(bench_more, index=index)
         # Calculate alpha/beta values
         alpha_beta = self.empyrical(return_types=np.ndarray).alpha_beta
-        alpha_less, beta_less = alpha_beta(returns_less, benchmark_less)
-        alpha_more, beta_more = alpha_beta(returns_more, benchmark_more)
+        alpha_less, beta_less = alpha_beta(returns_less, benchmark_less, period=empyrical.DAILY)
+        alpha_more, beta_more = alpha_beta(returns_more, benchmark_more, period=empyrical.DAILY)
         # Alpha determines by how much returns vary from the benchmark return.
         # A lower correlation leads to higher alpha.
         assert alpha_less > alpha_more
@@ -873,6 +883,7 @@ class TestStats(BaseTestCase):
         alpha, beta = self.empyrical(return_types=np.ndarray).alpha_beta(
             returns,
             benchmark,
+            period=empyrical.DAILY,
         )
         self.assertFalse(np.isnan(alpha))
         self.assertFalse(np.isnan(beta))
@@ -934,10 +945,10 @@ class TestStats(BaseTestCase):
         alpha, beta = self.empyrical(
             pandas_only=len(returns) != len(benchmark),
             return_types=np.ndarray,
-        ).alpha_beta(returns, benchmark)
+        ).alpha_beta(returns, benchmark, period=empyrical.DAILY)
         assert_almost_equal(
             alpha,
-            self.empyrical.alpha(returns, benchmark),
+            self.empyrical.alpha(returns, benchmark, period=empyrical.DAILY),
             DECIMAL_PLACES)
         assert_almost_equal(
             beta,
@@ -992,6 +1003,7 @@ class TestStats(BaseTestCase):
         (one_return, empyrical.DAILY, 11.274002099240244),
         (mixed_returns, empyrical.DAILY, 1.9135925373194231),
         (flat_line_1_tz, empyrical.DAILY, 11.274002099240256),
+        (mixed_returns, empyrical.CRYPTO, 3.706354044661887),
         (pd.Series(np.array(
             [3., 3., 3.])/100,
             index=pd.date_range('2000-1-30', periods=3, freq='A')
@@ -1065,7 +1077,7 @@ class TestStats(BaseTestCase):
         (mixed_returns, 6, [7.57445259, 8.22784105, 8.22784105, -3.1374751])
     ])
     def test_roll_sharpe_ratio(self, returns, window, expected):
-        test = self.empyrical.roll_sharpe_ratio(returns, window=window)
+        test = self.empyrical.roll_sharpe_ratio(returns, window=window, period=empyrical.DAILY)
         assert_almost_equal(
             np.asarray(test),
             np.asarray(expected),
@@ -1074,27 +1086,29 @@ class TestStats(BaseTestCase):
         self.assert_indexes_match(test, returns[-len(expected):])
 
     @parameterized.expand([
-        (empty_returns, empty_returns, np.nan),
-        (one_return, one_return, 1.),
-        (mixed_returns, mixed_returns, 1.),
-        (all_negative_returns, mixed_returns, -0.52257643222960259)
+        (empty_returns, empty_returns, empyrical.DAILY, np.nan),
+        (one_return, one_return, empyrical.DAILY, 1.),
+        (mixed_returns, mixed_returns, empyrical.DAILY, 1.),
+        (all_negative_returns, mixed_returns, empyrical.CRYPTO, -0.26980692717903604),
+        (all_negative_returns, mixed_returns, empyrical.DAILY, -0.52257643222960259)
     ])
-    def test_capture_ratio(self, returns, factor_returns, expected):
+    def test_capture_ratio(self, returns, factor_returns, period, expected):
         assert_almost_equal(
-            self.empyrical.capture(returns, factor_returns),
+            self.empyrical.capture(returns, factor_returns, period=period),
             expected,
             DECIMAL_PLACES)
 
     @parameterized.expand([
-        (empty_returns, empty_returns, np.nan),
-        (one_return, one_return, np.nan),
-        (mixed_returns, mixed_returns, 1.),
-        (all_negative_returns, mixed_returns, 0.99956025703798634),
-        (positive_returns, mixed_returns, -11.27400221)
+        (empty_returns, empty_returns, empyrical.DAILY, np.nan),
+        (one_return, one_return, empyrical.DAILY, np.nan),
+        (mixed_returns, mixed_returns, empyrical.DAILY, 1.),
+        (all_negative_returns, mixed_returns, empyrical.CRYPTO, 0.9999862601846166),
+        (all_negative_returns, mixed_returns, empyrical.DAILY, 0.99956025703798634),
+        (positive_returns, mixed_returns, empyrical.DAILY, -11.27400221)
     ])
-    def test_down_capture(self, returns, factor_returns, expected):
+    def test_down_capture(self, returns, factor_returns, period, expected):
         assert_almost_equal(
-            self.empyrical.down_capture(returns, factor_returns),
+            self.empyrical.down_capture(returns, factor_returns, period=period),
             expected,
             DECIMAL_PLACES)
 
@@ -1119,6 +1133,7 @@ class TestStats(BaseTestCase):
             returns,
             benchmark,
             window,
+            period=empyrical.DAILY,
         )
         if isinstance(test, pd.DataFrame):
             self.assert_indexes_match(test, benchmark[-len(expected):])
@@ -1143,37 +1158,37 @@ class TestStats(BaseTestCase):
         )
 
     @parameterized.expand([
-        (empty_returns, empty_returns, 1, []),
-        (one_return, one_return, 1,  np.nan),
-        (mixed_returns, mixed_returns, 6, [1., 1., 1., 1.]),
+        (empty_returns, empty_returns, 1, empyrical.DAILY, []),
+        (one_return, one_return, 1, empyrical.DAILY, np.nan),
+        (mixed_returns, mixed_returns, 6, empyrical.DAILY, [1., 1., 1., 1.]),
         (positive_returns, mixed_returns,
-         6, [-0.00011389, -0.00025861, -0.00015211, -0.00689239]),
+         6, empyrical.DAILY, [-0.00011389, -0.00025861, -0.00015211, -0.00689239]),
         (all_negative_returns, mixed_returns,
-         6, [-6.38880246e-05, -1.65241701e-04, -1.65241719e-04,
+         6, empyrical.DAILY, [-6.38880246e-05, -1.65241701e-04, -1.65241719e-04,
              -6.89541957e-03])
     ])
     def test_roll_up_down_capture(self, returns, factor_returns, window,
-                                  expected):
+                                  period, expected):
         test = self.empyrical.roll_up_down_capture(returns, factor_returns,
-                                                   window=window)
+                                                   window=window, period=period)
         assert_almost_equal(
             np.asarray(test),
             np.asarray(expected),
             DECIMAL_PLACES)
 
     @parameterized.expand([
-        (empty_returns, empty_returns, 1, []),
-        (one_return, one_return, 1,  [np.nan]),
-        (mixed_returns, mixed_returns, 6, [1., 1., 1., 1.]),
+        (empty_returns, empty_returns, 1, empyrical.DAILY, []),
+        (one_return, one_return, 1, empyrical.DAILY, [np.nan]),
+        (mixed_returns, mixed_returns, 6, empyrical.DAILY, [1., 1., 1., 1.]),
         (positive_returns, mixed_returns,
-         6, [-11.2743862, -11.2743862, -11.2743862, -11.27400221]),
+         6, empyrical.DAILY, [-11.2743862, -11.2743862, -11.2743862, -11.27400221]),
         (all_negative_returns, mixed_returns,
-         6, [0.92058591, 0.92058591, 0.92058591, 0.99956026])
+         6, empyrical.DAILY, [0.92058591, 0.92058591, 0.92058591, 0.99956026])
     ])
     def test_roll_down_capture(self, returns, factor_returns, window,
-                               expected):
+                               period, expected):
         test = self.empyrical.roll_down_capture(returns, factor_returns,
-                                                window=window)
+                                                window=window, period=period)
         assert_almost_equal(
             np.asarray(test),
             np.asarray(expected),
@@ -1182,18 +1197,18 @@ class TestStats(BaseTestCase):
         self.assert_indexes_match(test, returns[-len(expected):])
 
     @parameterized.expand([
-        (empty_returns, empty_returns, 1, []),
-        (one_return, one_return, 1,  [1.]),
-        (mixed_returns, mixed_returns, 6, [1., 1., 1., 1.]),
+        (empty_returns, empty_returns, 1, empyrical.DAILY, []),
+        (one_return, one_return, 1, empyrical.DAILY, [1.]),
+        (mixed_returns, mixed_returns, 6, empyrical.DAILY, [1., 1., 1., 1.]),
         (positive_returns, mixed_returns,
-         6, [0.00128406, 0.00291564, 0.00171499, 0.0777048]),
+         6, empyrical.DAILY, [0.00128406, 0.00291564, 0.00171499, 0.0777048]),
         (all_negative_returns, mixed_returns,
-         6, [-5.88144154e-05, -1.52119182e-04, -1.52119198e-04,
+         6, empyrical.DAILY, [-5.88144154e-05, -1.52119182e-04, -1.52119198e-04,
              -6.89238735e-03])
     ])
-    def test_roll_up_capture(self, returns, factor_returns, window, expected):
+    def test_roll_up_capture(self, returns, factor_returns, window, period, expected):
         test = self.empyrical.roll_up_capture(returns, factor_returns,
-                                              window=window)
+                                              window=window, period=period)
         assert_almost_equal(
             np.asarray(test),
             np.asarray(expected),
@@ -1213,7 +1228,7 @@ class TestStats(BaseTestCase):
         down_alpha, down_beta = self.empyrical(
             pandas_only=len(returns) != len(benchmark),
             return_types=np.ndarray,
-        ).down_alpha_beta(returns, benchmark)
+        ).down_alpha_beta(returns, benchmark, period=empyrical.DAILY)
         assert_almost_equal(
             down_alpha,
             expected[0],
@@ -1235,7 +1250,7 @@ class TestStats(BaseTestCase):
         up_alpha, up_beta = self.empyrical(
             pandas_only=len(returns) != len(benchmark),
             return_types=np.ndarray,
-        ).up_alpha_beta(returns, benchmark)
+        ).up_alpha_beta(returns, benchmark, period=empyrical.DAILY)
         assert_almost_equal(
             up_alpha,
             expected[0],
@@ -1246,28 +1261,30 @@ class TestStats(BaseTestCase):
             DECIMAL_PLACES)
 
     @parameterized.expand([
-        (empty_returns, empty_returns, np.nan),
-        (one_return, one_return, np.nan),
-        (mixed_returns, mixed_returns, 1.),
-        (positive_returns, mixed_returns, -0.0006756053495),
-        (all_negative_returns, mixed_returns, -0.0004338236)
+        (empty_returns, empty_returns, empyrical.DAILY, np.nan),
+        (one_return, one_return, empyrical.DAILY, np.nan),
+        (mixed_returns, mixed_returns, empyrical.DAILY, 1.),
+        (positive_returns, mixed_returns, empyrical.DAILY, -0.0006756053495),
+        (all_negative_returns, mixed_returns, empyrical.CRYPTO, -1.3455636701945743e-05),
+        (all_negative_returns, mixed_returns, empyrical.DAILY, -0.0004338236)
     ])
-    def test_up_down_capture(self, returns, factor_returns, expected):
+    def test_up_down_capture(self, returns, factor_returns, period, expected):
         assert_almost_equal(
-            self.empyrical.up_down_capture(returns, factor_returns),
+            self.empyrical.up_down_capture(returns, factor_returns, period=period),
             expected,
             DECIMAL_PLACES)
 
     @parameterized.expand([
-        (empty_returns, empty_returns, np.nan),
-        (one_return, one_return, 1.),
-        (mixed_returns, mixed_returns, 1.),
-        (positive_returns, mixed_returns, 0.0076167762),
-        (all_negative_returns, mixed_returns, -0.0004336328)
+        (empty_returns, empty_returns, empyrical.DAILY, np.nan),
+        (one_return, one_return, empyrical.DAILY, 1.),
+        (mixed_returns, mixed_returns, empyrical.DAILY, 1.),
+        (positive_returns, mixed_returns, empyrical.DAILY, 0.0076167762),
+        (all_negative_returns, mixed_returns, empyrical.CRYPTO, -1.3455451823981592e-05),
+        (all_negative_returns, mixed_returns, empyrical.DAILY, -0.0004336328)
     ])
-    def test_up_capture(self, returns, factor_returns, expected):
+    def test_up_capture(self, returns, factor_returns, period, expected):
         assert_almost_equal(
-            self.empyrical.up_capture(returns, factor_returns),
+            self.empyrical.up_capture(returns, factor_returns, period=period),
             expected,
             DECIMAL_PLACES)
 
@@ -1406,7 +1423,8 @@ class TestHelpers(BaseTestCase):
         res = emutils.roll(self.returns,
                            self.factor_returns,
                            window=12,
-                           function=empyrical.alpha_aligned)
+                           function=empyrical.alpha_aligned,
+                           period=empyrical.DAILY)
 
         self.assertEqual(res.size, self.ser_length - self.window + 1)
 
@@ -1414,7 +1432,8 @@ class TestHelpers(BaseTestCase):
         res = emutils.roll(self.returns.values,
                            self.factor_returns.values,
                            window=12,
-                           function=empyrical.alpha_aligned)
+                           function=empyrical.alpha_aligned,
+                           period=empyrical.DAILY)
 
         self.assertEqual(len(res), self.ser_length - self.window + 1)
 
